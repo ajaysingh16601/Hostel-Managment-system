@@ -2,50 +2,64 @@ import { useState } from "react";
 import { Input } from "../../LandingSite/AuthPage/Input";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { apiRequest } from "../../../utils/request";
 
 function Suggestions() {
-  const registerSuggestions = async (e) => {
-    e.preventDefault();
-    const student = JSON.parse(localStorage.getItem("student"));
-    const response = await fetch("http://localhost:3000/api/suggestion/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({student: student._id, hostel: student.hostel, title, description: desc}),
-    });
-
-    const data = await response.json();
-    if (data.success) {
-      toast.success("Suggestion registered successfully", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        draggable: true,
-        });
-    } else {
-      toast.error("Suggestion registration failed", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        draggable: true,
-        });
-    }
-  };
-
-
-
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
 
   function titleChange(e) {
     setTitle(e.target.value);
   }
+
   function descChange(e) {
     setDesc(e.target.value);
   }
+
+  const registerSuggestions = async (e) => {
+    e.preventDefault();
+    const student = JSON.parse(localStorage.getItem("student"));
+
+    if (!title || !desc) {
+      toast.error("Title and description cannot be empty!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    const requestData = {
+      student: student._id,
+      hostel: student.hostel,
+      title,
+      description: desc,
+    };
+
+    let result = await apiRequest("suggestion/register", "POST", requestData);
+
+    if (result.success) {
+      toast.success("Suggestion registered successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        draggable: true,
+      });
+      setTitle("");
+      setDesc("");
+    } else {
+      toast.error(result.errors?.[0]?.msg || "Suggestion registration failed!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        draggable: true,
+      });
+    }
+  };
 
   const suggestionTitle = {
     name: "suggestion title",

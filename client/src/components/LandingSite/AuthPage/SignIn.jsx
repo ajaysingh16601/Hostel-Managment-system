@@ -1,10 +1,11 @@
 import { Input } from "./Input";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { verifysession } from "../../../utils/";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Loader } from "../../Dashboards/Common/Loader";
+import { apiRequest } from "../../../utils/request";
 
 export default function SignIn() {
   let navigate = useNavigate();
@@ -20,49 +21,23 @@ export default function SignIn() {
       email: email,
       password: pass,
     };
-
-    let response = await fetch("http://localhost:3000/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data)
-    });
-
-    let result = await response.json();
-
+    let result = await apiRequest("auth/login", "POST", data);
     if (result.success) {
       localStorage.setItem("token", result.data.token);
-      let student = await fetch("http://localhost:3000/api/student/get-student", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          isAdmin: result.data.user.isAdmin,
-          token: result.data.token})
+  
+      let studentResult = await apiRequest("student/get-student", "POST", {
+        isAdmin: result.data.user.isAdmin,
+        token: result.data.token,
       });
-
-      let studentResult = await student.json();
+  
       if (studentResult.success) {
         localStorage.setItem("student", JSON.stringify(studentResult.student));
         navigate("/student-dashboard");
       } else {
-        // console.log(studentResult.errors)
+        toast.error("Failed to fetch student details", { theme: "dark" });
       }
     } else {
-      // alert(result.errors[0].msg);
-      toast.error(
-        result.errors[0].msg, {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      })
+      toast.error(result.errors[0].msg, { theme: "dark" });
     }
     setLoader(false);
   };
@@ -144,7 +119,7 @@ export default function SignIn() {
             pauseOnHover
             theme="dark"
           />
-          <p className="text-sm font-light text-gray-400">
+          {/* <p className="text-sm font-light text-gray-400">
             Don’t have an account yet?{" "}
             <Link
               to="/auth/request"
@@ -152,7 +127,7 @@ export default function SignIn() {
             >
               Request an account.
             </Link>
-          </p>
+          </p> */}
         </form>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
+import { apiRequest } from "../../../utils/request";
 
 const List = () => {
   const [invoiceList, setInvoiceList] = useState([
@@ -17,39 +18,38 @@ const List = () => {
     },
   ]);
   useEffect(() => {
-    let student = JSON.parse(localStorage.getItem("student"));
-    fetch("http://localhost:3000/api/invoice/student", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ student: student._id }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          let invoices = data.invoices;
-          let list = [];
-          invoices.forEach((invoice) => {
-            if (invoice.status.toLowerCase() === "pending") {
-              let date = new Date(invoice.date);
-              invoice.date = date.toLocaleDateString("en-US", {
+    const fetchInvoices = async () => {
+      let student = JSON.parse(localStorage.getItem("student"));
+  
+      let response = await apiRequest("invoice/student", "POST", {
+        student: student._id
+      });
+  
+      let data = await response.json();
+      if (data.success) {
+        let invoices = data.invoices.map((invoice) => {
+          if (invoice.status.toLowerCase() === "pending") {
+            return {
+              title: invoice.title,
+              amount: "Rs. " + invoice.amount,
+              status: invoice.status,
+              date: new Date(invoice.date).toLocaleDateString("en-US", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
-              });
-              list.push({
-                title: invoice.title,
-                amount: "Rs. " + invoice.amount,
-                status: invoice.status,
-                date: invoice.date,
-              });
-            }
-          });
-          setInvoiceList(list);
-        }
-      });
-  }, [invoiceList.length]);
+              }),
+            };
+          }
+          return null;
+        }).filter(Boolean); // Remove null values
+  
+        setInvoiceList(invoices);
+      }
+    };
+  
+    fetchInvoices();
+  }, []);
+  
 
   return (
     <div className="w-full max-w-md p-4 rounded-lg shadow sm:p-8 bg-neutral-950 drop-shadow-xl overflow-y-auto max-h-70">
@@ -121,24 +121,20 @@ function Home() {
 
   const getAttendance = async () => {
     let student = JSON.parse(localStorage.getItem("student"));
-    const res = await fetch("http://localhost:3000/api/attendance/get", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ student: student._id }),
+  
+    const res = await apiRequest("attendance/get", "POST", {
+      student: student._id
     });
+  
     const data = await res.json();
     if (data.success) {
       let daysOff = 0;
-      data.attendance.map((day) => {
+      data.attendance.forEach((day) => {
         if (day.status === "absent") {
           daysOff++;
         }
       });
       setDaysOff(daysOff);
-    } else {
-      // console.log("Error");
     }
   };
 
@@ -149,7 +145,7 @@ function Home() {
   const labels = ["Days off", "Days present"];
   let totalDays = new Date();
   totalDays = totalDays.getDate();
-  const [daysOff, setDaysOff] = useState(0); //!Fetch from database
+  const [daysOff, setDaysOff] = useState(0);
 
   return (
     <div className="w-full h-screen flex items-center justify-center flex-col gap-5 max-h-screen overflow-y-auto pt-64 lg:pt-0 md:pt-64 sm:pt-96">

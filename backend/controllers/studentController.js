@@ -86,7 +86,7 @@ const getStudent = async (req, res) => {
         success = true;
         res.json({success, student });
     } catch (err) {
-        res.status(500).json({success, errors: 'Server error'});
+        res.status(500).json({err, errors: 'Server error'});
     }
 }
 

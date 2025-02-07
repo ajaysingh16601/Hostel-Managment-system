@@ -42,7 +42,7 @@ function Contact() {
 
   return (
     <section className="min-h-screen flex items-center justify-center">
-      <div className="bg-white/30 backdrop-blur-lg shadow-lg rounded-2xl p-8 max-w-lg w-full">
+      <div className="bg-gray-800 backdrop-blur-lg shadow-lg rounded-2xl p-8 max-w-lg w-full">
         <h2 className="text-3xl font-bold text-center text-white">Contact Us</h2>
         <p className="text-center text-white/80 mb-6">
           If you have any queries or concerns, feel free to reach out.

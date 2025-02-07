@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 const { registerComplaint, getbyhostel, getbystudent, resolve } = require('../controllers/complaintController');
+const { authMiddleware } = require('../utils/auth');
 
-router.post('/register', [
+router.post('/register', authMiddleware, [
     check('student', 'Student is required').not().isEmpty(),
     check('hostel', 'Hostel is required').not().isEmpty(),
     check('type', 'Type is required').not().isEmpty(),
@@ -11,15 +12,15 @@ router.post('/register', [
     check('description', 'Description is required').not().isEmpty()
 ], registerComplaint);
 
-router.post('/hostel/', [
+router.post('/hostel/', authMiddleware, [
     check('hostel', 'Hostel is required').not().isEmpty()
 ], getbyhostel);
 
-router.post('/student', [
+router.post('/student', authMiddleware, [
     check('student', 'Student is required').not().isEmpty()
 ], getbystudent);
 
-router.post('/resolve', [
+router.post('/resolve', authMiddleware, [
     check('id', 'Complaint id is required').not().isEmpty()
 ], resolve);
 

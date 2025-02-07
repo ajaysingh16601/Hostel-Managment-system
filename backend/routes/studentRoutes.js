@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 const { registerStudent, getStudent, getAllStudents, updateStudent, deleteStudent, csvStudent } = require('../controllers/studentController');
+const { authMiddleware } = require('../utils/auth');
 
-router.post('/register-student', [
+router.post('/register-student', authMiddleware, [
     check('name', 'Name is required').not().isEmpty(),
     check('cms_id', 'CMS ID of at least 6 digit is required').isLength(6),
     check('room_no', 'Room number is required').isLength(1),
@@ -25,12 +26,12 @@ router.post('/get-student', [
     check('token', 'You donot have a valid token').notEmpty()
 ], getStudent);
 
-router.post('/get-all-students',[
+router.post('/get-all-students',authMiddleware, [
     check('hostel', 'Hostel is required').not().isEmpty()
 ],
 getAllStudents);
 
-router.post('/update-student', [
+router.post('/update-student', authMiddleware, [
     check('cms_id', 'CMS ID is required').not().isEmpty(),
     check('room_no', 'Room number is required').not().isEmpty(),
     check('batch', 'Batch is required').not().isEmpty(),
@@ -46,14 +47,13 @@ router.post('/update-student', [
     check('hostel', 'Hostel is required').not().isEmpty()
 ], updateStudent);
 
-router.delete('/delete-student', [
+router.delete('/delete-student', authMiddleware, [
     check('id', 'Enter a valid ID').not().isEmpty(),
 ], deleteStudent);
 
-router.post('/csv', [
+router.post('/csv', authMiddleware, [
     check('hostel', 'Hostel is required').not().isEmpty()
 ], csvStudent);
 
 
 module.exports = router;
-

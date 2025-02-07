@@ -1,4 +1,5 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
+import { apiRequest } from "../../../utils/request";
 
 function Invoices() {
   const [invoiceList, setInvoiceList] = useState([]);
@@ -7,46 +8,44 @@ function Invoices() {
   const [paidInvoices, setPaidInvoices] = useState(0);
 
   useEffect(() => {
-    let student = JSON.parse(localStorage.getItem("student"));
-    fetch("http://localhost:3000/api/invoice/student", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        },
-        body: JSON.stringify({student: student._id}),
-      })
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchInvoices = async () => {
+      let student = JSON.parse(localStorage.getItem("student"));
+      try {
+        const data = await apiRequest("invoice/student", "POST", { student: student._id });
         if (data.success) {
           let invoices = data.invoices;
           let List = [];
           let paidInvoices = 0;
           let pendingInvoices = 0;
-    
+
           invoices.forEach((invoice) => {
-            if (invoice.status.toLowerCase === "paid") {
+            if (invoice.status.toLowerCase() === "paid") {
               paidInvoices += 1;
             } else {
               pendingInvoices += 1;
             }
             let date = new Date(invoice.date);
-            invoice.date= date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-            List.push(
-              {
-                title: invoice.title,
-                amount: "Rs. "+invoice.amount,
-                status: invoice.status,
-                date: invoice.date,
-              }
-            );
+            invoice.date = date.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+            List.push({
+              id: invoice._id,
+              title: invoice.title,
+              amount: "Rs. " + invoice.amount,
+              status: invoice.status,
+              date: invoice.date,
+            });
           });
           setInvoiceList(List);
           setTotalInvoices(invoices.length);
           setPaidInvoices(paidInvoices);
           setPendingInvoices(pendingInvoices);
         }
-      });
-  }, [invoiceList.length, totalInvoices, pendingInvoices, paidInvoices]);
+      } catch (error) {
+        console.error("Error fetching invoices:", error);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
 
   return (
     <div className="w-full h-screen flex flex-col gap-5 items-center justify-center max-h-screen overflow-y-auto">
@@ -61,28 +60,22 @@ function Invoices() {
         </div>
         <div className="flex flex-col items-center justify-center">
           <dt className="mb-2 text-5xl font-extrabold text-blue-700">{paidInvoices}</dt>
-          <dd className="text-gray-400 ">
-            Paid Invoices
-          </dd>
+          <dd className="text-gray-400 ">Paid Invoices</dd>
         </div>
         <div className="flex flex-col items-center justify-center">
           <dt className="mb-2 text-5xl font-extrabold text-blue-700">{pendingInvoices}</dt>
-          <dd className="text-gray-400">
-            Pending Invoices
-          </dd>
+          <dd className="text-gray-400">Pending Invoices</dd>
         </div>
       </div>
 
       <div className="w-full max-w-md p-4 border rounded-lg shadow sm:p-8 bg-neutral-950 border-neutral-900 drop-shadow-xl overflow-y-auto max-h-70">
         <div className="flex items-center justify-between mb-4">
-          <h5 className="text-xl font-bold leading-none text-white">
-            Latest Invoices
-          </h5>
+          <h5 className="text-xl font-bold leading-none text-white">Latest Invoices</h5>
         </div>
         <div className="flow-root">
           <ul role="list" className="divide-y divide-gray-700">
             {invoiceList.map((invoice) => (
-              <li className="py-3 sm:py-4" key="1">
+              <li className="py-3 sm:py-4" key={invoice.id}>
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0 text-white">
                     {invoice.status.toLowerCase() === "pending" ? (
@@ -94,11 +87,7 @@ function Invoices() {
                         stroke="currentColor"
                         className="w-8 h-8"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     ) : (
                       <svg
@@ -109,21 +98,13 @@ function Invoices() {
                         stroke="currentColor"
                         className="w-8 h-8"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4.5 12.75l6 6 9-13.5"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate text-white">
-                      {invoice.title}
-                    </p>
-                    <p className="text-sm truncate text-gray-400">
-                      {invoice.date}
-                    </p>
+                    <p className="text-sm font-medium truncate text-white">{invoice.title}</p>
+                    <p className="text-sm truncate text-gray-400">{invoice.date}</p>
                   </div>
                   <div className="flex flex-col items-center text-base font-semibold text-white">
                     {invoice.amount}
